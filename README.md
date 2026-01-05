@@ -19,8 +19,8 @@ pip install --upgrade esptool mpremote
 ## 2️⃣ Download firmware
 - Go to: https://micropython.org/download/ESP32_GENERIC_S3/
 - Download the latest **.bin** file
-- **Important**: Use the release that does **NOT** have "(Support for Octal-SPIRAM)" in the name
-- Do **NOT** use `_PSRAM` firmware unless you are certain your board has PSRAM
+- **Important**: Use the standard firmware version, NOT "Support for Octal-SPIRAM"
+- For boards with 2MB PSRAM: Use the regular ESP32_GENERIC_S3 firmware
 
 ---
 

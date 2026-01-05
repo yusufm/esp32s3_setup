@@ -1,31 +1,40 @@
 """
-LED Blink Example
-Simple example to blink an LED on the ESP32-S3
+ESP32-S3 Main Application
+Entry point for the MicroPython application
 """
 
+import config
 from machine import Pin
 import time
-
-# Configuration
-LED_PIN = 13  # Change to match your board's LED pin
-BLINK_INTERVAL = 0.5  # seconds
+import neopixel
+import machine
 
 def main():
-    """Blink LED continuously"""
-    led = Pin(LED_PIN, Pin.OUT)
-    
-    print(f"Blinking LED on pin {LED_PIN}")
-    print("Press Ctrl+C to stop")
+    """Main application loop"""
+    print(f"Starting {config.DEVICE_NAME}...")
+    print(f"Version: {config.VERSION}")
+    print(f"Free memory: {get_free_memory()} bytes")
     
     try:
+        # Example: RGB LED control
+        np = neopixel.NeoPixel(Pin(config.LED_PIN), 1)
+        colors = [(5, 0, 0), (0, 5, 0), (0, 0, 5)]
+        
         while True:
-            led.on()
-            time.sleep(BLINK_INTERVAL)
-            led.off()
-            time.sleep(BLINK_INTERVAL)
-    except KeyboardInterrupt:
-        print("Stopped by user")
-        led.off()
+            for color in colors:
+                np[0] = color
+                np.write()
+                time.sleep(0.5)
+                machine.idle()
+    except Exception as e:
+        print(f"LED error: {e}")
+
+
+def get_free_memory():
+    """Get free memory in bytes"""
+    import gc
+    gc.collect()
+    return gc.mem_free()
 
 if __name__ == "__main__":
     main()

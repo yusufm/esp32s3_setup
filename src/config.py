@@ -82,6 +82,19 @@ TIMEZONE_OFFSET = 0  # hours from UTC
 ENABLE_WEBREPL = False
 WEBREPL_PASSWORD = "password"
 
+# UART configuration for thermal printer
+UART_ENABLED = True
+UART_ID = 1  # UART1 for thermal printer
+UART_TX_PIN = 17  # ESP32 TX -> Printer RX
+UART_RX_PIN = 16  # ESP32 RX -> Printer TX  
+UART_BAUDRATE = 9600  # Common baudrate for thermal printers
+UART_TIMEOUT = 1000  # milliseconds
+
+# Thermal printer configuration
+THERMAL_PRINTER_ENABLED = True
+THERMAL_PRINTER_WIDTH = 58  # mm (58mm paper width)
+THERMAL_PRINTER_CHARS_PER_LINE = 32  # Approximate characters per line
+
 # Development settings
 AUTO_RELOAD = True
 REPL_ON_BOOT = False

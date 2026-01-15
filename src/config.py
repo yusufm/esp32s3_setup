@@ -95,6 +95,17 @@ THERMAL_PRINTER_ENABLED = True
 THERMAL_PRINTER_WIDTH = 58  # mm (58mm paper width)
 THERMAL_PRINTER_CHARS_PER_LINE = 32  # Approximate characters per line
 
+# Fortune slip bitmap modules (pre-rendered). Each module must export WIDTH, HEIGHT, BITMAP.
+# Example: ["fortune_slip_bitmap", "fortune_slip_bitmap_002"]
+FORTUNE_SLIP_MODULES = [
+    "fortune_slip_bitmap",
+    "fortune_slip_bitmap_001",
+    "fortune_slip_bitmap_002",
+    "fortune_slip_bitmap_003",
+    "fortune_slip_bitmap_004",
+    "fortune_slip_bitmap_005",
+]
+
 # Development settings
 AUTO_RELOAD = True
 REPL_ON_BOOT = False

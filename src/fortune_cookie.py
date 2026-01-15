@@ -2,6 +2,7 @@
 
 import random
 
+import config
 from thermal_printer import ThermalPrinter
 
 FORTUNES = [
@@ -49,36 +50,20 @@ def print_fortune(printer=None, fortune=None):
     if fortune is None:
         fortune = random.choice(FORTUNES)
 
-    try:
-        import fortune_slip_bitmap
-        print("fortune_cookie: using bitmap slip", fortune_slip_bitmap.WIDTH, fortune_slip_bitmap.HEIGHT)
-        printer.print_bitmap(
-            fortune_slip_bitmap.BITMAP,
-            fortune_slip_bitmap.WIDTH,
-            fortune_slip_bitmap.HEIGHT,
-            mode='normal'
-        )
-        printer.feed(6)
-    except Exception as e:
-        print("fortune_cookie: bitmap slip unavailable, falling back to text. error=", repr(e))
-        lines = wrap_text(fortune, max_chars_per_line=28)
+    slip_modules = getattr(config, "FORTUNE_SLIP_MODULES", None)
+    if not slip_modules:
+        slip_modules = ["fortune_slip_bitmap"]
 
-        printer.feed(2)
-        printer.print_corner_blocks(block_width_px=18, rows=2)
-        printer.feed(1)
-
-        printer.write(printer.FONT_SIZE_DOUBLE_HEIGHT)
-        for line in lines:
-            printer.print_line(line, "center")
-        printer.write(printer.FONT_SIZE_NORMAL)
-
-        printer.feed(1)
-        printer.print_corner_blocks(block_width_px=18, rows=2)
-
-        pad_lines = 18 - (len(lines) * 2)
-        if pad_lines < 8:
-            pad_lines = 8
-        printer.feed(pad_lines)
+    module_name = random.choice(slip_modules)
+    slip = __import__(module_name)
+    print("fortune_cookie: using bitmap slip", module_name, slip.WIDTH, slip.HEIGHT)
+    printer.print_bitmap(
+        slip.BITMAP,
+        slip.WIDTH,
+        slip.HEIGHT,
+        mode='normal'
+    )
+    printer.feed(6)
 
     if created_printer:
         return fortune

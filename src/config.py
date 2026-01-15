@@ -99,12 +99,7 @@ THERMAL_PRINTER_CHARS_PER_LINE = 32  # Approximate characters per line
 # Example: ["fortune_slip_bitmap", "fortune_slip_bitmap_002"]
 FORTUNE_SLIP_MODULES = [
     "fortune_slip_bitmap",
-    "fortune_slip_bitmap_001",
-    "fortune_slip_bitmap_002",
-    "fortune_slip_bitmap_003",
-    "fortune_slip_bitmap_004",
-    "fortune_slip_bitmap_005",
-]
+] + [f"fortune_slip_bitmap_{i:03d}" for i in range(1, 100)]
 
 # Development settings
 AUTO_RELOAD = True

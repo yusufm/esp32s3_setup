@@ -1,10 +1,18 @@
-"""Fortune cookie fortune printing for the thermal printer."""
+#!/usr/bin/env python3
+"""
+Generate fortune slip bitmaps with lucky numbers
+"""
 
+import argparse
 import random
+import sys
+from pathlib import Path
 
-import config
-from thermal_printer import ThermalPrinter
+# Add src directory to path
+src_path = Path(__file__).parent.parent / "src"
+sys.path.insert(0, str(src_path))
 
+# Import fortunes directly to avoid MicroPython dependencies
 FORTUNES = [
     "You will commit a very small crime against productivity.",
     "Today's plan is mostly 'we'll see.'",
@@ -108,65 +116,72 @@ FORTUNES = [
     "This fortune high-fives you and vanishes.",
 ]
 
-
-def wrap_text(text, max_chars_per_line=28):
-    words = text.split()
-    lines = []
-    current_line = ""
-
-    for word in words:
-        if len(current_line) + len(word) + (1 if current_line else 0) <= max_chars_per_line:
-            if current_line:
-                current_line += " " + word
-            else:
-                current_line = word
-        else:
-            if current_line:
-                lines.append(current_line)
-            current_line = word
-
-    if current_line:
-        lines.append(current_line)
-
-    return lines
+from render_fortune_slip import main as render_slip
 
 
-def get_fortune():
-    """Get a random fortune with lucky numbers."""
-    fortune = random.choice(FORTUNES)
+def get_fortune_with_lucky_numbers(fortune_text):
+    """Add lucky numbers to a fortune."""
     lucky_numbers = sorted(random.sample(range(1, 100), 6))
-    return f"{fortune}\n\nLucky numbers: {', '.join(map(str, lucky_numbers))}"
+    return f"{fortune_text}\n\nLucky numbers: {', '.join(map(str, lucky_numbers))}"
 
 
-def print_fortune(printer=None, fortune=None):
-    """Print a single authentic-style fortune slip.
+def generate_all_fortunes(font_path, output_dir="src"):
+    """Generate bitmap files for all fortunes with lucky numbers."""
+    output_path = Path(output_dir)
+    output_path.mkdir(exist_ok=True)
+    
+    # Generate fortune slips
+    for i, fortune in enumerate(FORTUNES):
+        fortune_with_numbers = get_fortune_with_lucky_numbers(fortune)
+        
+        # Generate filename
+        if i == 0:
+            filename = "fortune_slip_bitmap.py"
+        else:
+            filename = f"fortune_slip_bitmap_{i:03d}.py"
+        
+        outfile = output_path / filename
+        
+        # Call render_slip with the fortune text using known-good parameters
+        sys.argv = [
+            "render_fortune_slip.py",
+            "--text", fortune_with_numbers,
+            "--font", font_path,
+            "--width", "650",
+            "--height", "364", 
+            "--rotate", "90",
+            "--auto_size",
+            "--size_min", "24",
+            "--size_max", "80",
+            "--margin", "0.04",
+            "--out", str(outfile)
+        ]
+        
+        try:
+            render_slip()
+            print(f"Generated: {outfile}")
+        except Exception as e:
+            print(f"Error generating {outfile}: {e}")
+    
+    print(f"\nGenerated {len(FORTUNES)} fortune slip bitmaps")
+    print("Update config.FORTUNE_SLIP_MODULES to include the new files")
 
-    If printer is not provided, one will be created.
-    """
-    created_printer = False
-    if printer is None:
-        printer = ThermalPrinter()
-        created_printer = True
 
-    if fortune is None:
-        fortune = get_fortune()
+def main():
+    parser = argparse.ArgumentParser(description="Generate fortune slip bitmaps with lucky numbers")
+    parser.add_argument("--font", required=True, help="Path to .ttf font file")
+    parser.add_argument("--output", default="src", help="Output directory (default: src)")
+    parser.add_argument("--count", type=int, help="Generate only this many fortunes (for testing)")
+    
+    args = parser.parse_args()
+    
+    if args.count:
+        # Temporarily limit fortunes for testing
+        global FORTUNES
+        FORTUNES = FORTUNES[:args.count]
+    
+    generate_all_fortunes(args.font, args.output)
 
-    slip_modules = getattr(config, "FORTUNE_SLIP_MODULES", None)
-    if not slip_modules:
-        slip_modules = ["fortune_slip_bitmap"]
 
-    module_name = random.choice(slip_modules)
-    slip = __import__(module_name)
-    print("fortune_cookie: using bitmap slip", module_name, slip.WIDTH, slip.HEIGHT)
-    printer.print_bitmap(
-        slip.BITMAP,
-        slip.WIDTH,
-        slip.HEIGHT,
-        mode='normal'
-    )
-    printer.feed(6)
-
-    if created_printer:
-        return fortune
-
-    return fortune
+if __name__ == "__main__":
+    main()

@@ -5,21 +5,66 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 def wrap_text(draw, text, font, max_width_px):
-    words = text.split()
-    lines = []
-    cur = ""
-    for w in words:
-        test = (cur + " " + w).strip()
-        bbox = draw.textbbox((0, 0), test, font=font)
-        if bbox[2] <= max_width_px:
-            cur = test
-        else:
-            if cur:
-                lines.append(cur)
-            cur = w
-    if cur:
-        lines.append(cur)
-    return lines
+    # Split by newlines first, then wrap each line
+    paragraphs = text.split('\n')
+    all_lines = []
+    
+    for paragraph in paragraphs:
+        if not paragraph.strip():  # Empty line
+            all_lines.append('')
+            continue
+            
+        words = paragraph.split()
+        cur = ""
+        for w in words:
+            test = (cur + " " + w).strip()
+            bbox = draw.textbbox((0, 0), test, font=font)
+            if bbox[2] <= max_width_px:
+                cur = test
+            else:
+                if cur:
+                    all_lines.append(cur)
+                cur = w
+        if cur:
+            all_lines.append(cur)
+    
+    return all_lines
+
+
+def render_text_with_different_sizes(draw, text, font_path, font_size, max_width_px, max_height_px):
+    """Render text with smaller font for lucky numbers line."""
+    # Split the text into fortune and lucky numbers parts
+    parts = text.split('\n\nLucky numbers: ')
+    fortune_text = parts[0]
+    lucky_numbers_text = 'Lucky numbers: ' + parts[1] if len(parts) > 1 else ''
+    
+    # Font for fortune text
+    fortune_font = ImageFont.truetype(font_path, font_size)
+    
+    # Smaller font for lucky numbers (about 60% of main font size)
+    lucky_font_size = max(12, int(font_size * 0.6))
+    lucky_font = ImageFont.truetype(font_path, lucky_font_size)
+    
+    # Wrap fortune text
+    fortune_lines = wrap_text(draw, fortune_text, fortune_font, max_width_px)
+    
+    # Wrap lucky numbers text if it exists
+    lucky_lines = []
+    if lucky_numbers_text:
+        lucky_lines = wrap_text(draw, lucky_numbers_text, lucky_font, max_width_px)
+    
+    # Calculate total height needed
+    line_height_fortune = draw.textbbox((0, 0), "Ag", font=fortune_font)[3]
+    line_height_lucky = draw.textbbox((0, 0), "Ag", font=lucky_font)[3]
+    
+    # Add spacing between fortune and lucky numbers
+    spacing = max(8, int(line_height_fortune * 0.5))
+    
+    total_height = (len(fortune_lines) * (line_height_fortune + 2)) + spacing
+    if lucky_lines:
+        total_height += (len(lucky_lines) * (line_height_lucky + 2))
+
+    return fortune_lines, lucky_lines, fortune_font, lucky_font, line_height_fortune, line_height_lucky, spacing, total_height
 
 
 def layout_text_for_width(text, font_path, font_size_min, font_size_max, max_width_px):
@@ -107,20 +152,36 @@ def main():
             args.size_max,
             max_text_width,
         )
-    else:
-        font = ImageFont.truetype(args.font, args.size)
+        # Use the chosen auto-sized font's size for rendering
+        chosen_size = getattr(font, "size", args.size_max)
+
         img_tmp = Image.new("1", (width, 32), 1)
         draw_tmp = ImageDraw.Draw(img_tmp)
-        lines = wrap_text(draw_tmp, args.text, font, max_text_width)
-
-    img_probe = Image.new("1", (width, 32), 1)
-    draw_probe = ImageDraw.Draw(img_probe)
-    line_h = draw_probe.textbbox((0, 0), "Ag", font=font)[3]
-    total_h = len(lines) * (line_h + 2)
+        fortune_lines, lucky_lines, fortune_font, lucky_font, line_h_fortune, line_h_lucky, spacing, total_h = render_text_with_different_sizes(
+            draw_tmp,
+            args.text,
+            args.font,
+            chosen_size,
+            max_text_width,
+            args.height,
+        )
+    else:
+        # Use the new function to handle different font sizes
+        img_tmp = Image.new("1", (width, 32), 1)
+        draw_tmp = ImageDraw.Draw(img_tmp)
+        fortune_lines, lucky_lines, fortune_font, lucky_font, line_h_fortune, line_h_lucky, spacing, total_h = render_text_with_different_sizes(
+            draw_tmp,
+            args.text,
+            args.font,
+            args.size,
+            max_text_width,
+            args.height
+        )
+        font = fortune_font
 
     block_w = 18
     block_h = 10
-    pad_y = max(12, int(line_h * 0.6))
+    pad_y = max(12, int(line_h_fortune * 0.6))
 
     if args.auto_height:
         base_h = total_h + (pad_y * 2) + (block_h * 2)
@@ -133,12 +194,24 @@ def main():
 
     y = max(0, (height - total_h) // 2)
 
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
+    # Draw fortune text with main font
+    for line in fortune_lines:
+        bbox = draw.textbbox((0, 0), line, font=fortune_font)
         tw = bbox[2]
         x = (width - tw) // 2
-        draw.text((x, y), line, font=font, fill=0)
-        y += line_h + 2
+        draw.text((x, y), line, font=fortune_font, fill=0)
+        y += line_h_fortune + 2
+    
+    # Add spacing
+    y += spacing
+    
+    # Draw lucky numbers with smaller font
+    for line in lucky_lines:
+        bbox = draw.textbbox((0, 0), line, font=lucky_font)
+        tw = bbox[2]
+        x = (width - tw) // 2
+        draw.text((x, y), line, font=lucky_font, fill=0)
+        y += line_h_lucky + 2
 
     draw.rectangle([0, 0, block_w, block_h], fill=0)
     draw.rectangle([width - block_w - 1, 0, width - 1, block_h], fill=0)

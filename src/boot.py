@@ -47,14 +47,10 @@ print(f"Version: {config.VERSION}")
 print(f"CPU Frequency: {config.CPU_FREQUENCY} MHz")
 print(f"Boot time: {time.ticks_ms()} ms")
 
-# Safety hatch: check for boot mode before running main
+# Safety hatch: when BOOT button is held during reset, skip running the main app.
+# Note: MicroPython automatically runs main.py after boot.py, so boot.py must NOT
+# import/run main itself (that can make the device hard to update over mpremote).
 boot_pin = Pin(0, Pin.IN, Pin.PULL_UP)
-if boot_pin.value() == 0:  # Boot button pressed
-    print("Boot mode detected - skipping main application")
-else:
-    # Import and run main application
-    try:
-        import main
-        main.main()
-    except Exception as e:
-        print(f"Error in main application: {e}")
+config.SKIP_MAIN = (boot_pin.value() == 0)
+if config.SKIP_MAIN:
+    print("Boot mode detected - skipping main.py")

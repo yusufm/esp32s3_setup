@@ -57,6 +57,8 @@ mpremote connect auto repl
 ```
 Then upload new files.
 
+**Update mode:** If `mpremote` stops being able to copy files after you install `boot.py`/`main.py`, reset the board while holding the **BOOT** button. This skips starting the main application loop so you can reliably use `mpremote connect auto fs cp ...`.
+
 ---
 
 ## 5️⃣ Connect to REPL
@@ -120,7 +122,7 @@ esp32s3_setup/
 1. **Install**: `pip install --upgrade esptool mpremote`
 2. **Download firmware**: Get .bin from https://micropython.org/download/ESP32_GENERIC_S3/
 3. **Flash**: `esptool erase-flash && esptool write-flash 0 firmware.bin`
-4. **Upload**: `mpremote connect auto cp -r . : && mpremote reset`
+4. **Upload**: Use the commands in "4️⃣ Upload project files" above
 5. **Develop**: `mpremote connect auto repl`
 
 ---

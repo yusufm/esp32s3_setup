@@ -105,4 +105,7 @@ def get_free_memory():
     return gc.mem_free()
 
 if __name__ == "__main__":
-    main()
+    if getattr(config, "SKIP_MAIN", False):
+        print("main.py: SKIP_MAIN is set - not starting main loop")
+    else:
+        main()

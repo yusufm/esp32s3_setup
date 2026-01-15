@@ -34,8 +34,18 @@ esptool write-flash 0 ESP32_GENERIC_S3-*.bin
 
 ## 4️⃣ Upload project files
 ```bash
-mpremote connect auto cp -r . :
-mpremote reset
+mpremote connect auto fs cp src/boot.py :boot.py
+mpremote connect auto fs cp src/main.py :main.py
+mpremote connect auto fs cp src/config.py :config.py
+mpremote connect auto fs cp src/thermal_printer.py :thermal_printer.py
+mpremote connect auto fs cp src/fortune_cookie.py :fortune_cookie.py
+mpremote connect auto fs cp src/fortune_slip_bitmap.py :fortune_slip_bitmap.py
+mpremote connect auto fs cp src/fortune_slip_bitmap_001.py :fortune_slip_bitmap_001.py
+mpremote connect auto fs cp src/fortune_slip_bitmap_002.py :fortune_slip_bitmap_002.py
+mpremote connect auto fs cp src/fortune_slip_bitmap_003.py :fortune_slip_bitmap_003.py
+mpremote connect auto fs cp src/fortune_slip_bitmap_004.py :fortune_slip_bitmap_004.py
+mpremote connect auto fs cp src/fortune_slip_bitmap_005.py :fortune_slip_bitmap_005.py
+mpremote connect auto reset
 ```
 
 **Note:** If the board gets stuck in a boot loop, first remove main.py:
@@ -127,7 +137,9 @@ esp32s3_setup/
 
 ## 🧾 Fortune Slip Bitmap (Known-Good)
 
-To generate a full-width fortune slip bitmap that prints correctly on this setup:
+This project prints **pre-rendered bitmap slips** (no dynamic text rendering). The ESP32 chooses a random bitmap module listed in `config.FORTUNE_SLIP_MODULES`.
+
+To generate a fortune slip bitmap that prints correctly on this setup (confirmed-good parameters):
 
 ```bash
 python3 tools/render_fortune_slip.py \
@@ -140,7 +152,7 @@ python3 tools/render_fortune_slip.py \
   --size_min 24 \
   --size_max 80 \
   --margin 0.04 \
-  --out src/fortune_slip_bitmap.py
+  --out src/fortune_slip_bitmap_006.py
 ```
 
 Preview locally:
@@ -152,6 +164,20 @@ python3 tools/preview_fortune_slip.py
 Upload to the ESP32 and reboot:
 
 ```bash
-mpremote connect auto fs cp src/fortune_slip_bitmap.py :fortune_slip_bitmap.py
+mpremote connect auto fs cp src/fortune_slip_bitmap_006.py :fortune_slip_bitmap_006.py
 mpremote connect auto reset
+```
+
+Add it to the pool in `src/config.py`:
+
+```py
+FORTUNE_SLIP_MODULES = [
+    "fortune_slip_bitmap",
+    "fortune_slip_bitmap_001",
+    "fortune_slip_bitmap_002",
+    "fortune_slip_bitmap_003",
+    "fortune_slip_bitmap_004",
+    "fortune_slip_bitmap_005",
+    "fortune_slip_bitmap_006",
+]
 ```

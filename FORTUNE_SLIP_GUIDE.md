@@ -12,6 +12,8 @@ The fortune slip bitmap has been regenerated with a **90-degree rotation**, chan
 
 Now the fortune will print vertically on the thermal printer paper as intended.
 
+This project prints **pre-rendered bitmap slips** (no dynamic text rendering). The ESP32 chooses a random bitmap module listed in `config.FORTUNE_SLIP_MODULES`.
+
 ## Files Cleaned Up
 
 Removed unnecessary example files:
@@ -43,8 +45,14 @@ This will:
 python3 tools/render_fortune_slip.py \
   --text "Your new fortune message here" \
   --font "/System/Library/Fonts/Helvetica.ttc" \
-  --size 28 \
-  --rotate 90
+  --width 650 \
+  --height 364 \
+  --rotate 90 \
+  --auto_size \
+  --size_min 24 \
+  --size_max 80 \
+  --margin 0.04 \
+  --out src/fortune_slip_bitmap_006.py
 ```
 
 **Important:** Always use `--rotate 90` for vertical printing!
@@ -56,8 +64,22 @@ python3 tools/preview_fortune_slip.py
 
 ### 3. Deploy to ESP32:
 ```bash
-mpremote connect auto cp src/fortune_slip_bitmap.py :fortune_slip_bitmap.py
+mpremote connect auto fs cp src/fortune_slip_bitmap_006.py :fortune_slip_bitmap_006.py
 mpremote connect auto reset
+```
+
+Then add it to the pool in `src/config.py`:
+
+```py
+FORTUNE_SLIP_MODULES = [
+    "fortune_slip_bitmap",
+    "fortune_slip_bitmap_001",
+    "fortune_slip_bitmap_002",
+    "fortune_slip_bitmap_003",
+    "fortune_slip_bitmap_004",
+    "fortune_slip_bitmap_005",
+    "fortune_slip_bitmap_006",
+]
 ```
 
 ### 4. Test on printer:
@@ -70,10 +92,9 @@ The current fortune slip contains:
 
 ## Technical Details
 
-- **Printer:** 58mm thermal printer (384 pixels wide)
+- **Printer:** 58mm thermal printer (printer mechanism is typically 384 pixels wide)
 - **Bitmap format:** 1-bit monochrome (black/white)
-- **Portrait dimensions:** 120×384 pixels
-- **Data size:** 5,760 bytes
+- **Portrait dimensions (known-good):** 360×648 pixels
 - **Rotation:** 90 degrees for vertical printing
 
 ## Files Structure
@@ -81,7 +102,7 @@ The current fortune slip contains:
 ```
 src/
   ├── fortune_cookie.py          # Fortune printing logic
-  ├── fortune_slip_bitmap.py     # Generated bitmap (120×384)
+  ├── fortune_slip_bitmap*.py    # Generated bitmap slips (pre-rendered)
   └── thermal_printer.py         # Printer driver
 
 tools/
@@ -95,7 +116,7 @@ tools/
 
 1. Load the updated code onto your ESP32:
    ```bash
-   mpremote connect auto cp src/fortune_slip_bitmap.py :fortune_slip_bitmap.py
+   mpremote connect auto fs cp src/fortune_slip_bitmap_001.py :fortune_slip_bitmap_001.py
    mpremote connect auto reset
    ```
 

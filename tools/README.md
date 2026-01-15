@@ -12,17 +12,19 @@ Generates a bitmap image from text for thermal printer output.
 python3 tools/render_fortune_slip.py \
   --text "Your fortune message here" \
   --font "/System/Library/Fonts/Helvetica.ttc" \
-  --size 28 \
-  --width 384 \
-  --height 120 \
+  --width 650 \
+  --height 364 \
   --rotate 90 \
+  --auto_size \
+  --size_min 24 \
+  --size_max 80 \
+  --margin 0.04 \
   --out src/fortune_slip_bitmap.py
 ```
 
 **Parameters:**
 - `--text`: Fortune message to render (required)
 - `--font`: Path to TTF font file (required)
-- `--size`: Font size in points (default: 28)
 - `--width`: Image width in pixels before rotation (default: 384)
 - `--height`: Image height in pixels before rotation (default: 120)
 - `--rotate`: Rotation angle - use 90 for portrait printing (default: 90)
@@ -51,8 +53,14 @@ This will:
    python3 tools/render_fortune_slip.py \
      --text "Adventure awaits around the corner." \
      --font "/System/Library/Fonts/Helvetica.ttc" \
-     --size 28 \
-     --rotate 90
+     --width 650 \
+     --height 364 \
+     --rotate 90 \
+     --auto_size \
+     --size_min 24 \
+     --size_max 80 \
+     --margin 0.04 \
+     --out src/fortune_slip_bitmap_006.py
    ```
 
 2. **Preview the result:**
@@ -62,7 +70,7 @@ This will:
 
 3. **Deploy to ESP32:**
    ```bash
-   mpremote connect auto cp src/fortune_slip_bitmap.py :fortune_slip_bitmap.py
+   mpremote connect auto fs cp src/fortune_slip_bitmap_006.py :fortune_slip_bitmap_006.py
    mpremote connect auto reset
    ```
 

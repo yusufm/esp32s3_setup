@@ -122,3 +122,36 @@ esp32s3_setup/
 - Keep `main.py` minimal for faster boot times
 - Use `config.py` for device-specific settings
 - Store reusable code in the `lib/` directory
+
+---
+
+## 🧾 Fortune Slip Bitmap (Known-Good)
+
+To generate a full-width fortune slip bitmap that prints correctly on this setup:
+
+```bash
+python3 tools/render_fortune_slip.py \
+  --text "You cannot shake hands with a clenched fist." \
+  --font "/System/Library/Fonts/Helvetica.ttc" \
+  --width 650 \
+  --height 364 \
+  --rotate 90 \
+  --auto_size \
+  --size_min 24 \
+  --size_max 80 \
+  --margin 0.04 \
+  --out src/fortune_slip_bitmap.py
+```
+
+Preview locally:
+
+```bash
+python3 tools/preview_fortune_slip.py
+```
+
+Upload to the ESP32 and reboot:
+
+```bash
+mpremote connect auto fs cp src/fortune_slip_bitmap.py :fortune_slip_bitmap.py
+mpremote connect auto reset
+```

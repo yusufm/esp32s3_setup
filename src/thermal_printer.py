@@ -226,7 +226,7 @@ class ThermalPrinter:
     
     def clear_buffer(self):
         """Clear printer buffer (if supported)"""
-        self.write(ESC + b'@')
+        self.write(self.ESC + b'@')
         time.sleep(0.1)
     
     def print_bitmap(self, bitmap_data, width, height, mode='normal'):
@@ -243,34 +243,57 @@ class ThermalPrinter:
         
         # Set print mode
         if mode == 'double_height':
-            self.write(ESC + b'!' + bytes([16]))
+            self.write(self.ESC + b'!' + bytes([16]))
         elif mode == 'double_width':
-            self.write(ESC + b'!' + bytes([32]))
+            self.write(self.ESC + b'!' + bytes([32]))
         elif mode == 'double_both':
-            self.write(ESC + b'!' + bytes([48]))
+            self.write(self.ESC + b'!' + bytes([48]))
         else:
-            self.write(ESC + b'!' + bytes([0]))
-        
-        # Send bitmap data line by line
+            self.write(self.ESC + b'!' + bytes([0]))
+
+        # Print using ESC/POS raster bit image command: GS v 0
+        # This matches a standard row-major 1bpp bitmap layout.
         bytes_per_line = width // 8
-        
-        for y in range(height):
-            # Extract line data
-            line_start = y * bytes_per_line
-            line_end = line_start + bytes_per_line
-            line_data = bitmap_data[line_start:line_end]
-            
-            # Send line command
-            nL = bytes_per_line & 0xFF
-            nH = (bytes_per_line >> 8) & 0xFF
-            self.write(ESC + b'*' + bytes([0, nL, nH]) + bytes(line_data))
-            
-            # Feed to next line
+
+        if isinstance(bitmap_data, list):
+            bitmap_data = bytes(bitmap_data)
+
+        expected_len = bytes_per_line * height
+        if len(bitmap_data) != expected_len:
+            raise ValueError("Bitmap data size does not match width/height")
+
+        xL = bytes_per_line & 0xFF
+        xH = (bytes_per_line >> 8) & 0xFF
+
+        # Many printers have practical limits on the height of a single raster command.
+        # Send the image in bands to avoid truncation.
+        band_height = 24
+        chunk_size = 64
+
+        for y0 in range(0, height, band_height):
+            band_h = band_height
+            if y0 + band_h > height:
+                band_h = height - y0
+
+            yL = band_h & 0xFF
+            yH = (band_h >> 8) & 0xFF
+            header = self.GS + b'v0' + bytes([0, xL, xH, yL, yH])
+            self.write(header)
+
+            start = y0 * bytes_per_line
+            end = start + (band_h * bytes_per_line)
+            band = bitmap_data[start:end]
+
+            # Stream data in small chunks with pacing to avoid UART/printer buffer overruns
+            for i in range(0, len(band), chunk_size):
+                self.uart.write(band[i:i + chunk_size])
+                time.sleep(0.03)
+
             self.write(b'\n')
-            time.sleep(0.01)
-        
+            time.sleep(0.20)
+
         # Reset to normal mode
-        self.write(ESC + b'!' + bytes([0]))
+        self.write(self.ESC + b'!' + bytes([0]))
     
     def print_simple_image(self, image_type='heart'):
         """Print a simple predefined image"""

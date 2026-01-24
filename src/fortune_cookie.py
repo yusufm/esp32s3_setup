@@ -109,6 +109,17 @@ FORTUNES = [
 ]
 
 
+def _choice(seq):
+    return seq[random.randint(0, len(seq) - 1)]
+
+
+def _sample_unique(lo, hi, k):
+    picked = set()
+    while len(picked) < k:
+        picked.add(random.randint(lo, hi))
+    return list(picked)
+
+
 def wrap_text(text, max_chars_per_line=28):
     words = text.split()
     lines = []
@@ -133,8 +144,8 @@ def wrap_text(text, max_chars_per_line=28):
 
 def get_fortune():
     """Get a random fortune with lucky numbers."""
-    fortune = random.choice(FORTUNES)
-    lucky_numbers = sorted(random.sample(range(1, 100), 6))
+    fortune = _choice(FORTUNES)
+    lucky_numbers = sorted(_sample_unique(1, 99, 6))
     return f"{fortune}\n\nLucky numbers: {', '.join(map(str, lucky_numbers))}"
 
 
@@ -155,7 +166,7 @@ def print_fortune(printer=None, fortune=None):
     if not slip_modules:
         slip_modules = ["fortune_slip_bitmap"]
 
-    module_name = random.choice(slip_modules)
+    module_name = _choice(slip_modules)
     slip = __import__(module_name)
     print("fortune_cookie: using bitmap slip", module_name, slip.WIDTH, slip.HEIGHT)
     printer.print_bitmap(

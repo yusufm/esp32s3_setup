@@ -13,6 +13,12 @@ CPU_FREQUENCY = 240  # MHz (max for ESP32-S3)
 # Pin configuration
 LED_PIN = 48  # NeoPixel RGB LED pin
 
+# Lid reed switch configuration
+LID_SWITCH_PIN = 4
+LID_SWITCH_DEBOUNCE_MS = 75
+LID_MIN_PRINT_INTERVAL_MS = 5000
+LID_CLOSED_STABLE_MS = 1000
+
 # GPIO pin definitions
 GPIO_PINS = {
     'D0': 0,
@@ -99,7 +105,7 @@ THERMAL_PRINTER_CHARS_PER_LINE = 32  # Approximate characters per line
 # Example: ["fortune_slip_bitmap", "fortune_slip_bitmap_002"]
 FORTUNE_SLIP_MODULES = [
     "fortune_slip_bitmap",
-] + [f"fortune_slip_bitmap_{i:03d}" for i in range(1, 100)]
+] + [f"fortune_slip_bitmap_{i:03d}" for i in range(1, 33)]
 
 # Development settings
 AUTO_RELOAD = True

@@ -23,6 +23,10 @@ else:
 
 def main():
     """Main application loop"""
+    startup_delay_ms = getattr(config, "STARTUP_DELAY_MS", 0)
+    if startup_delay_ms:
+        time.sleep_ms(startup_delay_ms)
+
     print(f"Starting {config.DEVICE_NAME}...")
     print(f"Version: {config.VERSION}")
     print(f"Free memory: {get_free_memory()} bytes")

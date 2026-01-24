@@ -71,6 +71,8 @@ LOG_LEVEL = "INFO"  # DEBUG, INFO, WARNING, ERROR
 LOOP_DELAY = 0.1  # seconds
 WATCHDOG_TIMEOUT = 30000  # milliseconds
 
+STARTUP_DELAY_MS = 5000
+
 # Power management
 DEEP_SLEEP_ENABLED = False
 DEEP_SLEEP_DURATION = 60000  # milliseconds

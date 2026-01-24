@@ -1,5 +1,6 @@
 """Fortune cookie fortune printing for the thermal printer."""
 
+import os
 import random
 
 import config
@@ -118,6 +119,45 @@ def _sample_unique(lo, hi, k):
     while len(picked) < k:
         picked.add(random.randint(lo, hi))
     return list(picked)
+
+
+def discover_slip_modules(prefix="fortune_slip_bitmap"):
+    modules = []
+    try:
+        files = os.listdir()
+    except OSError:
+        return modules
+
+    for name in files:
+        if not (isinstance(name, str) and name.endswith('.py')):
+            continue
+        if name == prefix + '.py':
+            modules.append(prefix)
+            continue
+        if name.startswith(prefix + '_'):
+            modules.append(name[:-3])
+
+    def _sort_key(m):
+        if m == prefix:
+            return (0, 0)
+        suffix = m[len(prefix):]
+        if suffix.startswith('_'):
+            n = suffix[1:]
+            try:
+                return (1, int(n))
+            except ValueError:
+                return (2, n)
+        return (2, m)
+
+    modules.sort(key=_sort_key)
+    return modules
+
+
+def configure_slip_modules():
+    modules = discover_slip_modules()
+    if modules:
+        config.FORTUNE_SLIP_MODULES = modules
+    return modules
 
 
 def wrap_text(text, max_chars_per_line=28):

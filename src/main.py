@@ -41,6 +41,12 @@ def main():
         try:
             printer = ThermalPrinter()
             print("Thermal printer initialized successfully")
+            try:
+                modules = fortune_cookie.configure_slip_modules()
+                if modules:
+                    print("Fortune slips:", len(modules), "modules")
+            except Exception as e:
+                print(f"Fortune slip discovery failed: {e}")
         except Exception as e:
             print(f"Failed to initialize thermal printer: {e}")
             printer = None
